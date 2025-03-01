@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMI Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-lg mb-6">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center py-3">
+                <div class="flex space-x-4">
+                    <a href="bmi.html" class="text-blue-600 font-bold">BMI Tracker</a>
+                    <a href="food.html" class="text-gray-700 hover:text-blue-600">Food Tracker</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="userDisplay" class="text-gray-700"></span>
+                    <button onclick="logout()" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Calculator Section -->
+        <div class="bg-white p-8 rounded-lg shadow-lg">
+            <h1 class="text-3xl font-bold text-center mb-6 text-blue-600">BMI Calculator</h1>
+            
+            <div class="mb-4">
+                <div class="flex justify-center space-x-4 mb-6">
+                    <button id="metricBtn" class="px-4 py-2 rounded bg-blue-500 text-white font-semibold active">Metric</button>
+                    <button id="imperialBtn" class="px-4 py-2 rounded bg-gray-300 text-gray-700 font-semibold">Imperial</button>
+                </div>
+
+                <div id="metricInputs">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Height (cm)</label>
+                        <input type="number" id="heightCm" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Weight (kg)</label>
+                        <input type="number" id="weightKg" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    </div>
+                </div>
+
+                <div id="imperialInputs" class="hidden">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Height (ft)</label>
+                        <input type="number" id="heightFt" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Height (in)</label>
+                        <input type="number" id="heightIn" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Weight (lbs)</label>
+                        <input type="number" id="weightLbs" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="calculateAndSaveBMI()" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-200">Calculate & Save BMI</button>
+
+            <div id="result" class="mt-6 text-center hidden">
+                <div class="text-xl font-bold mb-2">Your BMI: <span id="bmiValue"></span></div>
+                <div id="bmiCategory" class="text-lg"></div>
+                <div id="bmiDescription" class="mt-2 text-sm text-gray-600"></div>
+            </div>
+
+            <!-- BMI Categories Chart -->
+            <div class="mt-8 border-t pt-6">
+                <h2 class="text-xl font-bold text-center mb-4">BMI Categories</h2>
+                <div class="relative h-12 mb-8">
+                    <div class="absolute w-full h-8 flex">
+                        <div class="w-1/4 bg-blue-500 rounded-l-lg"></div>
+                        <div class="w-1/4 bg-green-500"></div>
+                        <div class="w-1/4 bg-yellow-500"></div>
+                        <div class="w-1/4 bg-red-500 rounded-r-lg"></div>
+                    </div>
+                    <div class="absolute w-full flex justify-between text-xs -bottom-6">
+                        <span class="text-blue-500">18.5</span>
+                        <span class="text-green-500">24.9</span>
+                        <span class="text-yellow-500">29.9</span>
+                        <span class="text-red-500">30+</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-4 gap-2 text-center text-sm">
+                    <div class="p-2 bg-blue-100 rounded">
+                        <div class="font-bold text-blue-500">Underweight</div>
+                        <div class="text-xs">&lt; 18.5</div>
+                    </div>
+                    <div class="p-2 bg-green-100 rounded">
+                        <div class="font-bold text-green-500">Normal</div>
+                        <div class="text-xs">18.5 - 24.9</div>
+                    </div>
+                    <div class="p-2 bg-yellow-100 rounded">
+                        <div class="font-bold text-yellow-500">Overweight</div>
+                        <div class="text-xs">25 - 29.9</div>
+                    </div>
+                    <div class="p-2 bg-red-100 rounded">
+                        <div class="font-bold text-red-500">Obese</div>
+                        <div class="text-xs">&gt; 30</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div class="bg-white p-8 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-bold text-center mb-6 text-blue-600">Your BMI History</h2>
+            <canvas id="bmiChart" class="mb-6"></canvas>
+            <div id="historyTable" class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">BMI</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">System</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody" class="bg-white divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isMetric = true;
+        let bmiChart = null;
+
+        // Check authentication on page load
+        checkAuth();
+
+        function checkAuth() {
+            fetch('login.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'check_session'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.logged_in) {
+                    window.location.href = 'auth.html';
+                } else {
+                    document.getElementById('userDisplay').textContent = `Welcome, ${data.username}!`;
+                    initializeChart();
+                    loadBMIHistory();
+                }
+            });
+        }
+
+        function logout() {
+            fetch('login.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'logout'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = 'auth.html';
+                }
+            });
+        }
+
+        // Initialize Chart
+        function initializeChart() {
+            const ctx = document.getElementById('bmiChart').getContext('2d');
+            bmiChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'BMI Over Time',
+                        data: [],
+                        borderColor: 'rgb(59, 130, 246)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Load BMI History
+        async function loadBMIHistory() {
+            try {
+                const response = await fetch('bmi_api.php');
+                const data = await response.json();
+                
+                if (data.error === 'Not authenticated') {
+                    window.location.href = 'auth.html';
+                    return;
+                }
+
+                // Update chart
+                const labels = data.map(record => new Date(record.created_at).toLocaleDateString());
+                const bmiValues = data.map(record => record.bmi);
+                
+                bmiChart.data.labels = labels;
+                bmiChart.data.datasets[0].data = bmiValues;
+                bmiChart.update();
+
+                // Update table
+                const tableBody = document.getElementById('historyTableBody');
+                tableBody.innerHTML = data.map(record => `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">${new Date(record.created_at).toLocaleDateString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${parseFloat(record.bmi).toFixed(1)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${record.category}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${record.measurement_system}</td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading BMI history:', error);
+            }
+        }
+
+        // Calculate and Save BMI
+        async function calculateAndSaveBMI() {
+            let height, weight, bmi;
+            const system = isMetric ? 'metric' : 'imperial';
+
+            if (isMetric) {
+                height = document.getElementById('heightCm').value / 100;
+                weight = document.getElementById('weightKg').value;
+                bmi = weight / (height * height);
+            } else {
+                const heightFt = parseFloat(document.getElementById('heightFt').value);
+                const heightIn = parseFloat(document.getElementById('heightIn').value);
+                const totalInches = (heightFt * 12) + heightIn;
+                weight = parseFloat(document.getElementById('weightLbs').value);
+                bmi = (weight / (totalInches * totalInches)) * 703;
+                height = totalInches * 0.0254; // Convert to meters for storage
+                weight = weight * 0.453592; // Convert to kg for storage
+            }
+
+            const resultDiv = document.getElementById('result');
+            const bmiValue = document.getElementById('bmiValue');
+            const bmiCategory = document.getElementById('bmiCategory');
+            const bmiDescription = document.getElementById('bmiDescription');
+
+            resultDiv.classList.remove('hidden');
+            bmiValue.textContent = bmi.toFixed(1);
+
+            let category, description, color;
+            if (bmi < 18.5) {
+                category = "Underweight";
+                description = "You are in the underweight range. Consider consulting with a healthcare provider.";
+                color = "text-blue-500";
+            } else if (bmi < 24.9) {
+                category = "Normal Weight";
+                description = "You are in a healthy weight range. Keep up the good work!";
+                color = "text-green-500";
+            } else if (bmi < 29.9) {
+                category = "Overweight";
+                description = "You are in the overweight range. Consider healthy lifestyle changes.";
+                color = "text-yellow-500";
+            } else {
+                category = "Obese";
+                description = "You are in the obese range. Please consult with a healthcare provider.";
+                color = "text-red-500";
+            }
+
+            bmiCategory.className = `text-lg font-semibold ${color}`;
+            bmiCategory.textContent = category;
+            bmiDescription.textContent = description;
+
+            // Save to database
+            try {
+                const response = await fetch('bmi_api.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        height: height,
+                        weight: weight,
+                        bmi: bmi,
+                        category: category,
+                        measurement_system: system
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.error === 'Not authenticated') {
+                    window.location.href = 'auth.html';
+                    return;
+                }
+
+                // Reload history after saving
+                loadBMIHistory();
+            } catch (error) {
+                console.error('Error saving BMI record:', error);
+            }
+        }
+
+        document.getElementById('metricBtn').addEventListener('click', () => {
+            isMetric = true;
+            document.getElementById('metricInputs').classList.remove('hidden');
+            document.getElementById('imperialInputs').classList.add('hidden');
+            document.getElementById('metricBtn').classList.add('bg-blue-500', 'text-white');
+            document.getElementById('metricBtn').classList.remove('bg-gray-300', 'text-gray-700');
+            document.getElementById('imperialBtn').classList.add('bg-gray-300', 'text-gray-700');
+            document.getElementById('imperialBtn').classList.remove('bg-blue-500', 'text-white');
+        });
+
+        document.getElementById('imperialBtn').addEventListener('click', () => {
+            isMetric = false;
+            document.getElementById('imperialInputs').classList.remove('hidden');
+            document.getElementById('metricInputs').classList.add('hidden');
+            document.getElementById('imperialBtn').classList.add('bg-blue-500', 'text-white');
+            document.getElementById('imperialBtn').classList.remove('bg-gray-300', 'text-gray-700');
+            document.getElementById('metricBtn').classList.add('bg-gray-300', 'text-gray-700');
+            document.getElementById('metricBtn').classList.remove('bg-blue-500', 'text-white');
+        });
+    </script>
+</body>
+</html>

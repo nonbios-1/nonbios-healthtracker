@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food & Calorie Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-lg mb-6">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center py-3">
+                <div class="flex space-x-4">
+                    <a href="bmi.html" class="text-gray-700 hover:text-blue-600">BMI Tracker</a>
+                    <a href="food.html" class="text-blue-600 font-bold">Food Tracker</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="userDisplay" class="text-gray-700"></span>
+                    <button onclick="logout()" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto p-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Food Entry Form -->
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-bold mb-6 text-blue-600">Log Food</h2>
+                <form id="foodForm" class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Food Name</label>
+                        <input type="text" id="foodName" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Calories</label>
+                        <input type="number" id="calories" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Protein (g)</label>
+                            <input type="number" id="protein" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" step="0.1">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Carbs (g)</label>
+                            <input type="number" id="carbs" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" step="0.1">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Fat (g)</label>
+                            <input type="number" id="fat" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" step="0.1">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Meal Type</label>
+                        <select id="mealType" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                            <option value="breakfast">Breakfast</option>
+                            <option value="lunch">Lunch</option>
+                            <option value="dinner">Dinner</option>
+                            <option value="snack">Snack</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-200">Log Food</button>
+                </form>
+            </div>
+
+            <!-- Daily Summary -->
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-blue-600">Daily Summary</h2>
+                    <select id="periodSelect" class="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <option value="day">Today</option>
+                        <option value="week">Past Week</option>
+                        <option value="month">Past Month</option>
+                    </select>
+                </div>
+                
+                <div class="mb-6">
+                    <canvas id="calorieChart"></canvas>
+                </div>
+
+                <div class="grid grid-cols-4 gap-4 mb-6">
+                    <div class="bg-blue-100 p-4 rounded-lg text-center">
+                        <div class="text-sm text-gray-600">Calories</div>
+                        <div id="totalCalories" class="text-xl font-bold text-blue-600">0</div>
+                    </div>
+                    <div class="bg-green-100 p-4 rounded-lg text-center">
+                        <div class="text-sm text-gray-600">Protein</div>
+                        <div id="totalProtein" class="text-xl font-bold text-green-600">0g</div>
+                    </div>
+                    <div class="bg-yellow-100 p-4 rounded-lg text-center">
+                        <div class="text-sm text-gray-600">Carbs</div>
+                        <div id="totalCarbs" class="text-xl font-bold text-yellow-600">0g</div>
+                    </div>
+                    <div class="bg-red-100 p-4 rounded-lg text-center">
+                        <div class="text-sm text-gray-600">Fat</div>
+                        <div id="totalFat" class="text-xl font-bold text-red-600">0g</div>
+                    </div>
+                </div>
+
+                <div id="foodList" class="space-y-2">
+                    <!-- Food entries will be listed here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Trends Section -->
+        <div class="mt-6 bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-bold mb-6 text-blue-600">Nutrition Trends</h2>
+            <canvas id="trendsChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let calorieChart = null;
+        let trendsChart = null;
+
+        // Check authentication on page load
+        checkAuth();
+
+        function checkAuth() {
+            fetch('login.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'check_session'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.logged_in) {
+                    window.location.href = 'auth.html';
+                } else {
+                    document.getElementById('userDisplay').textContent = `Welcome, ${data.username}!`;
+                    initializeCharts();
+                    loadFoodLogs();
+                }
+            });
+        }
+
+        function logout() {
+            fetch('login.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'logout'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = 'auth.html';
+                }
+            });
+        }
+
+        function initializeCharts() {
+            // Initialize Calorie Chart
+            const calorieCtx = document.getElementById('calorieChart').getContext('2d');
+            calorieChart = new Chart(calorieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Protein', 'Carbs', 'Fat'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#10B981', '#FBBF24', '#EF4444']
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+
+            // Initialize Trends Chart
+            const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+            trendsChart = new Chart(trendsCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Calories',
+                        data: [],
+                        borderColor: '#3B82F6',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Handle form submission
+        document.getElementById('foodForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const foodData = {
+                food_name: document.getElementById('foodName').value,
+                calories: parseInt(document.getElementById('calories').value),
+                protein: parseFloat(document.getElementById('protein').value) || 0,
+                carbs: parseFloat(document.getElementById('carbs').value) || 0,
+                fat: parseFloat(document.getElementById('fat').value) || 0,
+                meal_type: document.getElementById('mealType').value
+            };
+
+            try {
+                const response = await fetch('food_api.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(foodData)
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('foodForm').reset();
+                    loadFoodLogs();
+                }
+            } catch (error) {
+                console.error('Error logging food:', error);
+            }
+        });
+
+        // Load food logs
+        async function loadFoodLogs() {
+            const period = document.getElementById('periodSelect').value;
+            
+            try {
+                const response = await fetch(`food_api.php?period=${period}`);
+                const data = await response.json();
+
+                if (data.length > 0) {
+                    // Update summary
+                    const latest = data[0];
+                    document.getElementById('totalCalories').textContent = latest.total_calories;
+                    document.getElementById('totalProtein').textContent = `${Math.round(latest.total_protein)}g`;
+                    document.getElementById('totalCarbs').textContent = `${Math.round(latest.total_carbs)}g`;
+                    document.getElementById('totalFat').textContent = `${Math.round(latest.total_fat)}g`;
+
+                    // Update macro chart
+                    calorieChart.data.datasets[0].data = [
+                        latest.total_protein * 4,
+                        latest.total_carbs * 4,
+                        latest.total_fat * 9
+                    ];
+                    calorieChart.update();
+
+                    // Update trends chart
+                    trendsChart.data.labels = data.map(d => new Date(d.date).toLocaleDateString());
+                    trendsChart.data.datasets[0].data = data.map(d => d.total_calories);
+                    trendsChart.update();
+
+                    // Update food list
+                    document.getElementById('foodList').innerHTML = latest.foods.split(',').map(food => 
+                        `<div class="p-2 bg-gray-50 rounded flex justify-between">
+                            <span>${food}</span>
+                        </div>`
+                    ).join('');
+                }
+            } catch (error) {
+                console.error('Error loading food logs:', error);
+            }
+        }
+
+        // Period change handler
+        document.getElementById('periodSelect').addEventListener('change', loadFoodLogs);
+    </script>
+</body>
+</html>

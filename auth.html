@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMI Tracker - Login/Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full">
+        <!-- Login Form -->
+        <div id="loginForm" class="bg-white p-8 rounded-lg shadow-lg mb-4">
+            <h2 class="text-2xl font-bold text-center mb-6 text-blue-600">Login to BMI Tracker</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Username</label>
+                    <input type="text" id="loginUsername" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                    <input type="password" id="loginPassword" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <button onclick="login()" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-200">Login</button>
+            </div>
+            <p class="mt-4 text-center text-sm text-gray-600">
+                Don't have an account? 
+                <a href="#" onclick="toggleForms()" class="text-blue-500 hover:text-blue-700">Register here</a>
+            </p>
+        </div>
+
+        <!-- Register Form -->
+        <div id="registerForm" class="bg-white p-8 rounded-lg shadow-lg mb-4 hidden">
+            <h2 class="text-2xl font-bold text-center mb-6 text-blue-600">Create Account</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Username</label>
+                    <input type="text" id="regUsername" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                    <input type="email" id="regEmail" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                    <input type="password" id="regPassword" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                </div>
+                <button onclick="register()" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-200">Register</button>
+            </div>
+            <p class="mt-4 text-center text-sm text-gray-600">
+                Already have an account? 
+                <a href="#" onclick="toggleForms()" class="text-blue-500 hover:text-blue-700">Login here</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Check if user is already logged in
+        checkSession();
+
+        function checkSession() {
+            fetch('login.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'check_session'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.logged_in) {
+                    window.location.href = 'bmi.html';
+                }
+            });
+        }
+
+        function toggleForms() {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            loginForm.classList.toggle('hidden');
+            registerForm.classList.toggle('hidden');
+        }
+
+        function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            fetch('login.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'login',
+                    username: username,
+                    password: password
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = 'bmi.html';
+                } else {
+                    alert(data.error);
+                }
+            });
+        }
+
+        function register() {
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+
+            fetch('login.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'register',
+                    username: username,
+                    email: email,
+                    password: password
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = 'bmi.html';
+                } else {
+                    alert(data.error);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
